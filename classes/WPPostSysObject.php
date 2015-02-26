@@ -3,7 +3,7 @@ require_once(sprintf("%s/../../../../wp-load.php", dirname(__FILE__)));
 
 class WPPostSysObject
 {
-    public $post_id;
+    public $post_ID;
 
 	public function Update()
 	{
@@ -22,26 +22,29 @@ class WPPostSysObject
                     break;
 
                 case 'string':
+                case 'date':
                     $format[] = '%s';
                     break;
             }
             
             $data[$property] = $this->$property;
         }
-        
+
         foreach($data as $key => $value)
         {
             if ($value != '')
-                update_post_meta($this->post_id, '_'.$key, $value);
+                update_post_meta($this->post_ID, '_'.$key, $value);
             else
-                delete_post_meta($this->post_id, '_'.$key);
+                delete_post_meta($this->post_ID, '_'.$key);
         }
-        
+
         // delete values from database that doesn't exist in object
-        $meta_keys = get_post_meta($post_id);
-        foreach($meta_keys as $key => $value)
-            if (!array_key_exists('_'.$key, $data))
-                delete_post_meta($this->post_id, '_'.$key);
+        $meta_keys = get_post_meta($post_ID);
+
+        if ($meta_keys)
+			foreach($meta_keys as $key => $value)
+				if (!array_key_exists('_'.$key, $data))
+					delete_post_meta($this->post_ID, '_'.$key);
 	}
 
 	public function LoadBy_array($values)
@@ -62,21 +65,22 @@ class WPPostSysObject
                         break;
                     
                     case 'string':
+                    case 'date':
                         $this->$property = $values['_'.$property];
                         break;
                 }
             }
         }
+
+        $this->post_ID = $values['post_ID'];
     }
 
 	public function Load($id)
 	{
-		//ToDo:
-	}
+		foreach($this->properties as $property => $type)
+			$this->$property = get_post_meta($id, '_'.$property, true);
 
-	public function Delete($ids = array())
-	{
-		//ToDo:
+		$this->post_ID = $id;
 	}
 }
 ?>
